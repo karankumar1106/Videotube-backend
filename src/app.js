@@ -21,4 +21,10 @@ app.use(express.urlencoded({
 app.use(cookieParser());
 app.use(express.static('public')); // Serve static files from the "public" directory to use for profile pictures and other assets
 
+
+import userRoutes from './routes/user.routes.js';
+app.use('/api/v1/users', userRoutes); 
+
+// routes declaration
+
 export { app };
