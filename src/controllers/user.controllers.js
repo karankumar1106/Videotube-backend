@@ -284,7 +284,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
         avatarPublicId: avatar.public_id,
       },
     },
-    { new: true }
+    { returnDocument:'after' }
   ).select('-password -refreshToken');
 
   res.status(200).json(new ApiResponse(200, updatedUser, 'Avatar updated successfully'));
@@ -316,7 +316,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
         coverImagePublicId: coverImage.public_id,
       },
     },
-    { new: true }
+    { returnDocument:'after' }
   ).select('-password -refreshToken');
 
   res.status(200).json(new ApiResponse(200, updatedUser, 'Cover image updated successfully'));
@@ -337,7 +337,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
         email,
       },
     },
-    { new: true }
+    { returnDocument:'after' }
   ).select('-password -refreshToken');
 
   if (!user) {
