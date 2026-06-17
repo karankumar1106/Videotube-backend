@@ -6,6 +6,7 @@ import {
   refreshAccessToken,
   changeCurrentPassword,
   getCurrentUser,
+  getUserChannelProfile,
   updateAccountDetails,
   updateUserAvatar,
   updateUserCoverImage,
@@ -27,6 +28,7 @@ router.post('/login', loginUser);
 router.post('/logout', verifyJWT, logoutUser);
 router.post('/change-password', verifyJWT, changeCurrentPassword);
 router.get('/current', verifyJWT, getCurrentUser);
+router.get('/channel/:username', getUserChannelProfile);
 router.patch('/avatar', verifyJWT, upload.single('avatar'), updateUserAvatar);
 router.patch('/coverImage', verifyJWT, upload.single('coverImage'), updateUserCoverImage);
 router.patch('/update-account', verifyJWT, updateAccountDetails);
