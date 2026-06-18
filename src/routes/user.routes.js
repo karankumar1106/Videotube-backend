@@ -10,6 +10,7 @@ import {
   updateAccountDetails,
   updateUserAvatar,
   updateUserCoverImage,
+  getUserWatchHistory,
 } from '../controllers/user.controllers.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 import upload from '../middlewares/multer.middleware.js';
@@ -27,11 +28,17 @@ router.post(
 router.post('/login', loginUser);
 router.post('/logout', verifyJWT, logoutUser);
 router.post('/change-password', verifyJWT, changeCurrentPassword);
-router.get('/current', verifyJWT, getCurrentUser);
-router.get('/channel/:username', getUserChannelProfile);
+router.get('/current-user', verifyJWT, getCurrentUser);
+router.get('/channel/:username', verifyJWT, getUserChannelProfile);
 router.patch('/avatar', verifyJWT, upload.single('avatar'), updateUserAvatar);
-router.patch('/coverImage', verifyJWT, upload.single('coverImage'), updateUserCoverImage);
+router.patch(
+  '/coverImage',
+  verifyJWT,
+  upload.single('coverImage'),
+  updateUserCoverImage
+);
 router.patch('/update-account', verifyJWT, updateAccountDetails);
+router.get('/history', verifyJWT, getUserWatchHistory);
 
 router.post('/refresh-token', refreshAccessToken);
 

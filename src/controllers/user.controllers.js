@@ -423,7 +423,68 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, 'Account details updated successfully'));
 });
 
- 
+const getUserWatchHistory = asyncHandler(async (req, res) => {
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: req.user?._id,
+      },
+    },
+    {
+      $lookup: {
+        from: 'videos',
+        localField: 'watchHistory',
+        foreignField: '_id',
+        as: 'watchHistory',
+        pipeline: [
+          {
+            $lookup: {
+              from: 'users',
+              localField: 'owner',
+              foreignField: '_id',
+              as: 'owner',
+            },
+          },
+          {
+            $unwind: '$owner',
+          },
+          {
+            $project: {
+              videoFile: 1,
+              thumbnail: 1,
+              title: 1,
+              description: 1,
+              duration: 1,
+              views: 1,
+              isPublished: 1,
+              createdAt: 1,
+              owner: {
+                _id: 1,
+                userName: 1,
+                fullName: 1,
+                avatar: 1,
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  if (!user || !user.length) {
+    throw new ApiError(404, 'User not found');
+  }
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        user[0].watchHistory,
+        'Watch history fetched successfully'
+      )
+    );
+});
 
 export {
   registerUser,
@@ -436,4 +497,5 @@ export {
   updateAccountDetails,
   updateUserAvatar,
   updateUserCoverImage,
+  getUserWatchHistory,
 };

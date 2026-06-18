@@ -7,7 +7,7 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
   try {
     const accessToken =
       req.cookies?.accessToken ||
-      req.headers('Authorization')?.replace('Bearer ', '');
+      req.header('Authorization')?.replace('Bearer ', '');
     //   const refreshToken = req.cookies?.refreshToken || req.headers('Authorization')?.replace('Bearer ', '');
     if (!accessToken) {
       throw new ApiError(401, 'Access token is missing');
