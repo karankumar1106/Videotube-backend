@@ -38,9 +38,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
   const videos = await Video.aggregate([
     {
-      $match: {
-        filter,
-      },
+      $match: filter,
     },
     {
       $lookup: {
@@ -70,7 +68,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
       $sort: sortOptions,
     },
     {
-      $skip: Number(page) - 1 * Number(limit),
+      $skip: (Number(page) - 1) * Number(limit),
     },
     {
       $limit: Number(limit),
@@ -86,11 +84,165 @@ const getAllVideos = asyncHandler(async (req, res) => {
         videos,
         totalVideos,
         currentPage: Number(page),
-        totalPage: Math.ceil(totalVideos / limit),
+        totalPage: Math.ceil(totalVideos / Number(limit)),
       },
-      'Vidoes fetched successfully'
+      'Videos fetched successfully'
     )
   );
 });
 
-export { getAllVideos };
+const publishAVideo = asyncHandler(async (req, res) => {
+  const { title, description } = req.body;
+  if ([title, description].some((field) => field?.trim() === '')) {
+    throw new ApiError(400, 'Titles and descriptions are required');
+  }
+
+  const videoFileLocalPath = req.file?.videoFile?.[0].path;
+  const thumbnailLocalPath = req.file?.thumbnail?.[0].path;
+
+  if (!videoFileLocalPath) {
+    throw new ApiError(400, 'Video file is required');
+  }
+
+  if (!thumbnailLocalPath) {
+    throw new ApiError(400, 'Thumbnail is required');
+  }
+
+  const videoFile = await uploadOnCloudinary(videoFileLocalPath);
+  const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
+
+  if (!videoFile) {
+    throw new ApiError(500, 'Error while uploading video');
+  }
+
+  if (!thumbnail) {
+    throw new ApiError(500, 'Error while uploading thumbnail');
+  }
+
+  const video = await Video.create({
+    title,
+    description,
+    videoFile: videoFile.secure_url,
+    thumbnail: thumbnail.secure_url,
+    duration: videoFile.duration || 0,
+    owner: req.user?._id,
+    isPublished: true,
+  });
+
+  const uploadedVideo = await Video.findById(video._id);
+  if (!uploadedVideo) {
+    throw new ApiError(500, 'Something went wrong while uploading a video');
+  }
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, uploadedVideo, 'Video uploaded successfully'));
+});
+
+const getvideoById = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, 'Invali video id');
+  }
+
+  const video = await Video.aggregate([
+    {
+      $match: {
+        _id: new mong0ose.Types.ObjectId(videoId),
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'owner',
+        foreignField: '_id',
+        as: 'owner',
+        pipeline: [
+          {
+            $project: {
+              fullName: 1,
+              userName: 1,
+              avatar: 1,
+              coverImage: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $unwind: {
+        path: '$owner',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+  ]);
+
+  if (!video?.length) {
+    throw new ApiError(404, 'Video not found');
+  }
+
+  // increment views
+  await Video.findByIdAndUpdate(videoId, {
+    $inc: {
+      views: 1,
+    },
+  });
+
+  await User.findByIdAndUpdate(req.user?._id, {
+    $addToSet: {
+      watchHistory: videoId,
+    },
+  });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, video[0], 'Video fetched successfully'));
+});
+
+const updateVideo = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
+  const { title, description } = req.body;
+
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, 'Invalid videoId');
+  }
+
+  const video = await Video.findById(videoId);
+  if (!video) {
+    throw new ApiError(404, 'Video not found');
+  }
+
+  if (video.owner.toString() !== req.user?._id.toString()) {
+    throw new ApiError(401, 'Unauthorised request');
+  }
+
+  let thumbnailUrl = video.thumbnail;
+
+  if (req.file?.path) {
+    const thumbnail = await uploadOnCloudinary(req.file.path);
+    if (!thumbnail.url) {
+      throw new ApiError(500, 'Error while uploading thumbnail');
+    }
+    thumbnailUrl = thumbnail.secure_url;
+  }
+
+  const updatedVideo = await findByIdAndUpdate(
+    videoId,
+    {
+      $set: {
+        title: title || video.title,
+        description: description || video.description,
+        thumbnail: thumbnailUrl,
+      },
+    },
+    {
+      returnDocument: 'after',
+    }
+  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updateVideo, 'Video updated successfully'));
+});
+
+export { getAllVideos, publishAVideo, getvideoById,updateVideo };
