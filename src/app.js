@@ -24,8 +24,10 @@ app.use(express.static('public')); // Serve static files from the "public" direc
 
 import userRoutes from './routes/user.routes.js';
 import videoRoutes from './routes/video.routes.js'
+import playlistRoutes from "./routes/playlist.routes.js"
 app.use('/api/v1/users', userRoutes); 
 app.use('/api/v1/videos',videoRoutes)
+app.use("/api/v1/playlist",playlistRoutes)
 
 // routes declaration
 
