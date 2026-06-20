@@ -245,4 +245,64 @@ const updateVideo = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, updateVideo, 'Video updated successfully'));
 });
 
-export { getAllVideos, publishAVideo, getvideoById,updateVideo };
+const deleteVideo = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, 'Invalid video Id');
+  }
+
+  const video = await Video.findById(videoId);
+
+  if (!video) {
+    throw new ApiError(404, 'Video not found');
+  }
+
+  if (video.owner.toString() !== req.user?._id.toString()) {
+    throw new ApiError(403, 'Unauthorised request');
+  }
+
+  await Video.findByIdAndDelete(videoId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, 'Video deleted successfully'));
+});
+
+const togglePublishStatus = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, 'Invalid video id');
+  }
+
+  const video = await Video.findById(videoId);
+  if (!video) {
+    throw new ApiError(404, 'Video not found');
+  }
+
+  if (video.owner.toString() !== req.user?._id.toString()) {
+    throw new ApiError(403, 'Unauthorised request');
+  }
+
+  const updatedVideo = await findByIdAndUpdate(
+    videoId,
+    {
+      $set: {
+        isPublished: !video.isPublished,
+      },
+    },
+    {
+      returnDocument: 'after',
+    }
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        updateVideo,
+        `Video ${updateVideo.isPublished ? 'published' : 'unpublished'} succesfully`
+      )
+    );
+});
+export { getAllVideos, publishAVideo, getvideoById, updateVideo, deleteVideo,togglePublishStatus };
