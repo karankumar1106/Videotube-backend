@@ -106,7 +106,7 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, like, 'Tweet liked successfully'));
 });
 
-const getLikedVideos = async(async (req, res) => {
+const getLikedVideos = asyncHandler(async (req, res) => {
   const likedVideos = await Like.aggregate([
     {
       $match: {
