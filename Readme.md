@@ -82,13 +82,13 @@ Create a Cloudinary account and obtain:
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/<your-username>/<repo-name>.git
+git clone https://github.com/bytebykaran/Videotube-backend.git
 ```
 
 ### Navigate to Project Directory
 
 ```bash
-cd <repo-name>
+cd Videotube-backend
 ```
 
 ### Install Dependencies
@@ -148,6 +148,11 @@ backend/
 ├── package.json
 └── README.md
 ```
+## 🗄️ Database Schema
+
+View the database schema here:
+
+[Database Schema Diagram](https://app.eraser.io/workspace/YtPqZ1VogxGy1jzIDkzj)
 
 ---
 
