@@ -3,8 +3,11 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import mongoose, { isValidObjectId } from 'mongoose';
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
-import { uploadOnCloudinary } from '../utils/cloudinary.js';
-import {User} from "../models/user.models.js"
+import {
+  destroyOnCloudinary,
+  uploadOnCloudinary,
+} from '../utils/cloudinary.js';
+import { User } from '../models/user.models.js';
 
 const getAllVideos = asyncHandler(async (req, res) => {
   const {
@@ -127,6 +130,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
     thumbnail: thumbnail.secure_url,
     duration: videoFile.duration || 0,
     owner: req.user?._id,
+    thumbnailPublicId: thumbnail.public_id,
     isPublished: true,
   });
 
@@ -218,22 +222,30 @@ const updateVideo = asyncHandler(async (req, res) => {
   }
 
   let thumbnailUrl = video.thumbnail;
+  let thumbnailPublicId = Video.thumbnailPublicId;
 
   if (req.file?.path) {
+    const oldThumbnailPublicId = Video.thumbnailPublicId;
     const thumbnail = await uploadOnCloudinary(req.file.path);
     if (!thumbnail.url) {
       throw new ApiError(500, 'Error while uploading thumbnail');
     }
     thumbnailUrl = thumbnail.secure_url;
+    thumbnailPublicId = thumbnail.public_id;
+
+    if (oldThumbnailPublicId) {
+      await destroyOnCloudinary(oldThumbnailPublicId);
+    }
   }
 
-  const updatedVideo = await findByIdAndUpdate(
+  const updatedVideo = await Video.findByIdAndUpdate(
     videoId,
     {
       $set: {
         title: title || video.title,
         description: description || video.description,
         thumbnail: thumbnailUrl,
+        thumbnailPublicId,
       },
     },
     {
@@ -284,7 +296,7 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
     throw new ApiError(403, 'Unauthorised request');
   }
 
-  const updatedVideo = await findByIdAndUpdate(
+  const updatedVideo = await Video.findByIdAndUpdate(
     videoId,
     {
       $set: {
@@ -306,4 +318,11 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
       )
     );
 });
-export { getAllVideos, publishAVideo, getvideoById, updateVideo, deleteVideo,togglePublishStatus };
+export {
+  getAllVideos,
+  publishAVideo,
+  getvideoById,
+  updateVideo,
+  deleteVideo,
+  togglePublishStatus,
+};
