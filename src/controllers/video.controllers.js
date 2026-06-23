@@ -4,6 +4,7 @@ import mongoose, { isValidObjectId } from 'mongoose';
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { uploadOnCloudinary } from '../utils/cloudinary.js';
+import {User} from "../models/user.models.js"
 
 const getAllVideos = asyncHandler(async (req, res) => {
   const {
@@ -148,7 +149,7 @@ const getvideoById = asyncHandler(async (req, res) => {
   const video = await Video.aggregate([
     {
       $match: {
-        _id: new mong0ose.Types.ObjectId(videoId),
+        _id: new mongoose.Types.ObjectId(videoId),
       },
     },
     {
