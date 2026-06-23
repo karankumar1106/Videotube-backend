@@ -97,8 +97,8 @@ const publishAVideo = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Titles and descriptions are required');
   }
 
-  const videoFileLocalPath = req.file?.videoFile?.[0].path;
-  const thumbnailLocalPath = req.file?.thumbnail?.[0].path;
+  const videoFileLocalPath = req.files?.videoFile?.[0].path;
+  const thumbnailLocalPath = req.files?.thumbnail?.[0].path;
 
   if (!videoFileLocalPath) {
     throw new ApiError(400, 'Video file is required');
