@@ -82,7 +82,7 @@ Create a Cloudinary account and obtain:
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/bytebykaran/Videotube-backend.git
+git clone https://github.com/karankumar1106/Videotube-backend.git
 ```
 
 ### Navigate to Project Directory
